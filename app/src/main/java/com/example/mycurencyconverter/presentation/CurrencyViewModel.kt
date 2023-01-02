@@ -1,12 +1,9 @@
 package com.example.mycurencyconverter.presentation
 
-import android.app.Application
-import androidx.hilt.lifecycle.ViewModelInject
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.currencyconverter.domain.CurrencyConverter
 import com.example.mycurencyconverter.data.model.Rates
-import com.example.mycurencyconverter.domain.CurrencyConverterImpl
 import com.example.mycurencyconverter.utils.DispatcherProvider
 import com.example.mycurencyconverter.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,14 +15,14 @@ import kotlin.math.round
 
 @HiltViewModel
 class CurrencyViewModel @Inject constructor(
-    private val repository: CurrencyConverterImpl,
-    private val dispatchers:DispatcherProvider
+    val repository: CurrencyConverter,
+    val dispatchers:DispatcherProvider
 ): ViewModel(){
 
     private val _conversion = MutableStateFlow<CurrencyEvent>(CurrencyEvent.Empty)
     val conversion: StateFlow<CurrencyEvent> = _conversion
 
-    public val currentBalance = 1000
+    public val currentBalance = 1000.00
 
     sealed class CurrencyEvent {
         class Success(val resultText: String): CurrencyEvent()

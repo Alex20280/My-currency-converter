@@ -9,6 +9,8 @@
     <string name="_0_00_usd">0.00 USD</string>
     <string name="_0_00_bng">0.00 BNG</string>
     <string name="zero">0</string>
+    <string name="appLabel">Currency converter</string>
+    <string name="Euro">\u0020 EUR </string>
 
     <string-array name="currency_array">
         <item>CAD</item>

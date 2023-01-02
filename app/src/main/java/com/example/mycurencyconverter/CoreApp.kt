@@ -1,4 +1,4 @@
-package com.example.mycurencyconverter.app
+package com.example.mycurencyconverter
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

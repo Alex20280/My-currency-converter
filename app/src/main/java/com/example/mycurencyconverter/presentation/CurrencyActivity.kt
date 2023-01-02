@@ -1,6 +1,10 @@
 package com.example.mycurencyconverter.presentation
 
 import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -22,22 +26,16 @@ class CurrencyActivity : AppCompatActivity() {
 
         initToolbar()
         initViews()
-/*        initSpinner(binding.sellSpinner)
-        initSpinner(binding.receiveSpinner)*/
+        initSpinner(binding.sellSpinner)
+        initSpinner(binding.receiveSpinner)
+        initListener()
 
-        binding.submitBtn.setOnClickListener {
-            viewModel.convert(
-                binding.sellEditText.text.toString(),
-                binding.sellSpinner.selectedItem.toString(),
-                binding.receiveSpinner.selectedItem.toString(),
-            )
-        }
 
         lifecycleScope.launchWhenStarted {
             viewModel.conversion.collect { event ->
                 when (event) {
                     is CurrencyViewModel.CurrencyEvent.Success -> {
-                        binding.receiveEditText.setTextColor(getResources().getColor(R.color.linght_green))
+                        binding.receiveEditText.setTextColor(getResources().getColor(R.color.light_green))
                         //TODO
                     }
                     is CurrencyViewModel.CurrencyEvent.Failure -> {
@@ -47,46 +45,34 @@ class CurrencyActivity : AppCompatActivity() {
                 }
             }
         }
-/*        ArrayAdapter.createFromResource(
-            this,
-            R.array.currency_array,
-            android.R.layout.simple_spinner_item
-        ).also { adapter ->
-            // Specify the layout to use when the list of choices appears
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            // Apply the adapter to the spinner
-            binding.sellSpinner.adapter = adapter
+    }
 
-            binding.sellSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-
-                }
-                override fun onNothingSelected(parent: AdapterView<*>) { }
-            }
-
-        }*/
+    private fun initListener() {
+        binding.submitBtn.setOnClickListener {
+            viewModel.convert(
+                binding.sellEditText.text.toString(),
+                binding.sellSpinner.selectedItem.toString(),
+                binding.receiveSpinner.selectedItem.toString(),
+            )
+        }
     }
 
     private fun initViews() {
-        binding.euroTv.text = viewModel.currentBalance.toString().plus("EUR")
+        binding.euroTv.text = viewModel.currentBalance.toString().plus(getString(R.string.Euro))
     }
 
     private fun initToolbar() {
-        binding.toolbar.root.title = "Currency converter"
+        binding.toolbar.root.title = getString(R.string.appLabel)
     }
 
-/*    private fun initSpinner(spinner: Spinner) {
+    private fun initSpinner(spinner: Spinner) {
         ArrayAdapter.createFromResource(
             this,
-            com.example.mycurencyconverter.R.array.currency_array,
-            android.R.layout.simple_spinner_item
+            R.array.currency_array,
+            R.layout.my_selected_item
         ).also { adapter ->
-            // Specify the layout to use when the list of choices appears
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-
-            // Apply the adapter to the spinner
+            adapter.setDropDownViewResource(R.layout.my_dropdown_item)
             spinner.adapter = adapter
-
             spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(
                     parent: AdapterView<*>,
@@ -94,11 +80,9 @@ class CurrencyActivity : AppCompatActivity() {
                     position: Int,
                     id: Long
                 ) {
-
                 }
-
                 override fun onNothingSelected(parent: AdapterView<*>) {}
             }
         }
-    }*/
+    }
 }
