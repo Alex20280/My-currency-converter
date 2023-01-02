@@ -11,6 +11,8 @@ import androidx.lifecycle.lifecycleScope
 import com.example.mycurencyconverter.R
 import com.example.mycurencyconverter.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+import java.math.RoundingMode
+
 
 @AndroidEntryPoint
 class CurrencyActivity : AppCompatActivity() {
@@ -35,8 +37,9 @@ class CurrencyActivity : AppCompatActivity() {
             viewModel.conversion.collect { event ->
                 when (event) {
                     is CurrencyViewModel.CurrencyEvent.Success -> {
+                        binding.receiveEditText.setText(getString(R.string.plus_sign).plus(event.resultText))
                         binding.receiveEditText.setTextColor(getResources().getColor(R.color.light_green))
-                        //TODO
+                        showNotificationDialog()
                     }
                     is CurrencyViewModel.CurrencyEvent.Failure -> {
                         //TODO
@@ -58,7 +61,23 @@ class CurrencyActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        binding.euroTv.text = viewModel.currentBalance.toString().plus(getString(R.string.Euro))
+        //binding.euroTv.text = viewModel.currentBalance.toString().plus(getString(R.string.Euro))
+            lifecycleScope.launchWhenStarted {
+                viewModel.euroBalance.collect{ euroCounter ->
+                    //binding.euroTv.text = euroCounter.toString() + " EUR"
+                    binding.euroTv.text = euroCounter.toString().plus(getString(R.string.euro))
+                }
+
+            }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.usdBalance.collect{ usdCounter ->
+                //binding.usdTv.text = usdCounter.toString() + " USD"
+                binding.usdTv.text = usdCounter.toString().plus(getString(R.string.usd))
+
+            }
+        }
+
     }
 
     private fun initToolbar() {
@@ -84,5 +103,9 @@ class CurrencyActivity : AppCompatActivity() {
                 override fun onNothingSelected(parent: AdapterView<*>) {}
             }
         }
+    }
+
+    fun showNotificationDialog() {
+
     }
 }
