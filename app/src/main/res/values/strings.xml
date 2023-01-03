@@ -7,11 +7,12 @@
     <string name="receive">Receive</string>
     <string name="_1000_00_eur">1000.00 EUR</string>
     <string name="_0_00_usd">0.00 USD</string>
-    <string name="_0_00_bng">0.00 BNG</string>
+    <string name="_0_00_bgn">0.00 BGN</string>
     <string name="zero">0</string>
     <string name="appLabel">Currency converter</string>
     <string name="euro">\u0020 EUR </string>
     <string name="usd">\u0020 USD </string>
+    <string name="bgn">\u0020 BGN </string>
     <string name="plus_sign">+</string>
     <string name="Done">Done</string>
     <string name="currency_converted">Currency converted</string>

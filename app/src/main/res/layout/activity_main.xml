@@ -111,21 +111,21 @@
         android:layout_height="wrap_content"
         android:textColor="@color/black"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/bngTv"
+        app:layout_constraintEnd_toStartOf="@+id/bgnTv"
         app:layout_constraintStart_toEndOf="@+id/euroTv"
         app:layout_constraintTop_toTopOf="@+id/euroTv"
         android:text="@string/_0_00_usd" />
 
     <TextView
-        android:id="@+id/bngTv"
-        android:layout_width="60dp"
+        android:id="@+id/bgnTv"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="24dp"
+        android:layout_marginEnd="28dp"
+        android:text="@string/_0_00_bgn"
         android:textColor="@color/black"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/usdTv"
-        android:text="@string/_0_00_bng" />
+        app:layout_constraintTop_toTopOf="@+id/usdTv" />
 
     <TextView
         android:id="@+id/exchangeTv"
@@ -204,6 +204,6 @@
         android:backgroundTint="@color/black"
         android:entries="@array/currency_array"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/bngTv" />
+        app:layout_constraintTop_toBottomOf="@+id/bgnTv" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

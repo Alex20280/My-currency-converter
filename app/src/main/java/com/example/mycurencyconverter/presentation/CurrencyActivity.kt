@@ -11,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import com.example.mycurencyconverter.R
 import com.example.mycurencyconverter.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
-import java.math.RoundingMode
 
 
 @AndroidEntryPoint
@@ -38,10 +37,12 @@ class CurrencyActivity : AppCompatActivity() {
                 when (event) {
                     is CurrencyViewModel.CurrencyEvent.Success -> {
                         binding.receiveEditText.setText(getString(R.string.plus_sign).plus(event.resultText))
-                        binding.receiveEditText.setTextColor(getResources().getColor(R.color.light_green))
+                        binding.receiveEditText.setTextColor(resources.getColor(R.color.light_green))
                         showNotificationDialog()
                     }
                     is CurrencyViewModel.CurrencyEvent.Failure -> {
+                        //binding.euroTv.setTextColor(resources.getColor(R.color.red))
+                        //binding.receiveEditText.setText(event.errorText)
                         //TODO
                     }
                     else -> Unit
@@ -63,21 +64,26 @@ class CurrencyActivity : AppCompatActivity() {
     private fun initViews() {
         //binding.euroTv.text = viewModel.currentBalance.toString().plus(getString(R.string.Euro))
             lifecycleScope.launchWhenStarted {
-                viewModel.euroBalance.collect{ euroCounter ->
+                viewModel.euroBalance.collect{ euroWallet ->
                     //binding.euroTv.text = euroCounter.toString() + " EUR"
-                    binding.euroTv.text = euroCounter.toString().plus(getString(R.string.euro))
+                    binding.euroTv.text = euroWallet.toString().plus(getString(R.string.euro))
                 }
 
             }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.usdBalance.collect{ usdCounter ->
-                //binding.usdTv.text = usdCounter.toString() + " USD"
-                binding.usdTv.text = usdCounter.toString().plus(getString(R.string.usd))
+            viewModel.usdBalance.collect{ usdWallet ->
+                binding.usdTv.text = usdWallet.toString().plus(getString(R.string.usd))
 
             }
         }
 
+        lifecycleScope.launchWhenStarted {
+            viewModel.bngBalance.collect{ bgnWallet ->
+                binding.bgnTv.text = bgnWallet.toString().plus(getString(R.string.bgn))
+
+            }
+        }
     }
 
     private fun initToolbar() {
