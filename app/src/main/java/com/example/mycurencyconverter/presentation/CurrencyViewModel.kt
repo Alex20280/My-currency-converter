@@ -1,6 +1,7 @@
 package com.example.mycurencyconverter.presentation
 
 import android.util.Log
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.currencyconverter.domain.CurrencyConverter
@@ -22,11 +23,13 @@ class CurrencyViewModel @Inject constructor(
     val dispatchers:DispatcherProvider
 ): ViewModel(){
 
-    private val currentEuroBalance = 1000.0
+    val currentEuroBalance = 1000.0
     private var currentUsdBalance = 0.0
     private var currentBngBalance = 0.0
     private var transactionCounter = 0
     private val commissionFee = 0.007
+
+    var convertedAmount = 0.0
 
     private val _conversion = MutableStateFlow<CurrencyEvent>(CurrencyEvent.Empty)
     val conversion: StateFlow<CurrencyEvent> = _conversion
@@ -43,7 +46,6 @@ class CurrencyViewModel @Inject constructor(
     sealed class CurrencyEvent {
         class Success(val resultText: String): CurrencyEvent()
         class Failure(val errorText: String): CurrencyEvent()
-        //object Loading : CurrencyEvent()
         object Empty : CurrencyEvent()
     }
 
@@ -57,7 +59,6 @@ class CurrencyViewModel @Inject constructor(
             return
         }
         viewModelScope.launch(dispatchers.io) {
-            //_conversion.value = CurrencyEvent.Loading
             when(val ratesResponse = repository.getRates(fromCurrency)) {
                 is Resource.Error -> _conversion.value = CurrencyEvent.Failure(ratesResponse.message!!)
                 is Resource.Success -> {
@@ -66,16 +67,15 @@ class CurrencyViewModel @Inject constructor(
                     if(rate == null) {
                         _conversion.value = CurrencyEvent.Failure("Unexpected error")
                     } else {
-                        val convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
+                        convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
                         if (fromCurrency == "EUR"){
                             _currentEuroBalance.value  -= amountStr.toDouble()
                         }
-                        if (fromCurrency == "USD"){
-                            _currentEuroBalance.value  -= amountStr.toDouble()
+                        if (toCurrency == "USD"){
+                            _currentUsdBalance.value  += convertedAmount
                         }
-                        when(toCurrency){
-                            "USD" -> _currentUsdBalance.value = +convertedAmount  //TODO
-                            "BGN" -> _currentBngBalance.value = +convertedAmount //TODO
+                        if (toCurrency == "BGN"){
+                            _currentBngBalance.value  += convertedAmount
                         }
                         _conversion.value = CurrencyEvent.Success(convertedAmount.toString())
                         transactionCounter++

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="240dp"
+    android:layout_height="130dp"
+    android:background="@drawable/layout_bg"
+    android:orientation="vertical">
+
+
+    <TextView
+        android:id="@+id/dialogTitleTv"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/currency_converted" />
+
+    <TextView
+        android:id="@+id/dialogTextTv"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:layout_margin="7dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="TextView" />
+
+    <View
+        android:id="@+id/firstDevider"
+        android:layout_width="match_parent"
+        android:layout_height="0.3dp"
+        android:layout_marginTop="15dp"
+        android:background="@color/grey" />
+
+    <Button
+        android:id="@+id/dialogDoneBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:backgroundTint="@color/white"
+        android:text="@string/Done"
+        android:background="@android:color/transparent"
+        android:textAllCaps="false"
+        android:textColor="@color/kahu_blue"
+        android:textStyle="bold" />
+</LinearLayout>

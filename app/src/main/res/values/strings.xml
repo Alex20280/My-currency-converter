@@ -16,6 +16,7 @@
     <string name="plus_sign">+</string>
     <string name="Done">Done</string>
     <string name="currency_converted">Currency converted</string>
+    <string name="done">Done</string>
 
     <string-array name="currency_array">
         <item>EUR</item>
