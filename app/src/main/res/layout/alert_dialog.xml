@@ -38,6 +38,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:backgroundTint="@color/white"
+        android:textSize="16sp"
         android:text="@string/Done"
         android:background="@android:color/transparent"
         android:textAllCaps="false"

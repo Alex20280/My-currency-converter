@@ -27,9 +27,10 @@ class CurrencyViewModel @Inject constructor(
     private var currentUsdBalance = 0.0
     private var currentBngBalance = 0.0
     private var transactionCounter = 0
+    private var freeTransactionLimit = 4
     private val commissionFee = 0.007
-
-    var convertedAmount = 0.0
+    var uiComisionFee = 0.0
+    private var convertedAmount = 0.0
 
     private val _conversion = MutableStateFlow<CurrencyEvent>(CurrencyEvent.Empty)
     val conversion: StateFlow<CurrencyEvent> = _conversion
@@ -67,7 +68,13 @@ class CurrencyViewModel @Inject constructor(
                     if(rate == null) {
                         _conversion.value = CurrencyEvent.Failure("Unexpected error")
                     } else {
-                        convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
+                        if (transactionCounter > freeTransactionLimit){
+                            convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
+                            _currentEuroBalance.value  -= currentEuroBalance*commissionFee
+                            uiComisionFee = 0.70
+                        } else{
+                            convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
+                        }
                         if (fromCurrency == "EUR"){
                             _currentEuroBalance.value  -= amountStr.toDouble()
                         }
@@ -76,6 +83,9 @@ class CurrencyViewModel @Inject constructor(
                         }
                         if (toCurrency == "BGN"){
                             _currentBngBalance.value  += convertedAmount
+                        }
+                        if (toCurrency == "EUR"){
+                            _currentEuroBalance.value  += convertedAmount
                         }
                         _conversion.value = CurrencyEvent.Success(convertedAmount.toString())
                         transactionCounter++

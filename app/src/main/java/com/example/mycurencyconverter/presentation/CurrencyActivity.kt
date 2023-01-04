@@ -20,10 +20,6 @@ import java.math.RoundingMode
 @AndroidEntryPoint
 class CurrencyActivity : AppCompatActivity() {
 
-
-    val positiveButtonClick = { dialog: DialogInterface, which: Int ->
-        dialog.dismiss()
-    }
     private val viewModel: CurrencyViewModel by viewModels()
 
     private lateinit var binding: ActivityMainBinding
@@ -40,17 +36,16 @@ class CurrencyActivity : AppCompatActivity() {
         initListener()
         observe()
 
-
     }
 
-    private fun observe(){
+    private fun observe() {
         lifecycleScope.launchWhenStarted {
             viewModel.conversion.collect { event ->
                 when (event) {
                     is CurrencyViewModel.CurrencyEvent.Success -> {
                         binding.receiveEditText.setText(getString(R.string.plus_sign).plus(event.resultText))
                         binding.receiveEditText.setTextColor(resources.getColor(R.color.light_green))
-                        showDialog("You have converted ${viewModel.currentEuroBalance} EUR to ${viewModel.convertedAmount} USD. Commission Fee - 0.70 EUR.")
+                        showDialog("You have converted ${binding.sellEditText.text} ${binding.sellSpinner.selectedItem} to ${binding.receiveEditText.text} ${binding.receiveSpinner.selectedItem}. Commission Fee -  ${viewModel.uiComisionFee} ${binding.receiveSpinner.selectedItem}.")
                     }
                     is CurrencyViewModel.CurrencyEvent.Failure -> {
                         //TODO (Implement some notification. Depends on usecase)
@@ -72,26 +67,27 @@ class CurrencyActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        //binding.euroTv.text = viewModel.currentBalance.toString().plus(getString(R.string.Euro))
-            lifecycleScope.launchWhenStarted {
-                viewModel.euroBalance.collect{ euroWallet ->
-                    binding.euroTv.text = euroWallet.toString().plus(getString(R.string.euro))
-                }
-
+        lifecycleScope.launchWhenStarted {
+            viewModel.euroBalance.collect { euroWallet ->
+                binding.euroTv.text = euroWallet.toString().plus(getString(R.string.euro))
             }
 
+        }
+
         lifecycleScope.launchWhenStarted {
-            viewModel.usdBalance.collect{ usdWallet ->
-                //binding.usdTv.text = usdWallet.toString().plus(getString(R.string.usd))
-                binding.usdTv.text = BigDecimal(usdWallet).setScale(2, RoundingMode.HALF_EVEN).toString().plus(getString(R.string.usd))
+            viewModel.usdBalance.collect { usdWallet ->
+                binding.usdTv.text =
+                    BigDecimal(usdWallet).setScale(2, RoundingMode.HALF_EVEN).toString()
+                        .plus(getString(R.string.usd))
 
             }
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.bngBalance.collect{ bgnWallet ->
-                //binding.bgnTv.text = bgnWallet.toString().plus(getString(R.string.bgn))
-                binding.bgnTv.text = BigDecimal(bgnWallet).setScale(2, RoundingMode.HALF_EVEN).toString().plus(getString(R.string.bgn))
+            viewModel.bngBalance.collect { bgnWallet ->
+                binding.bgnTv.text =
+                    BigDecimal(bgnWallet).setScale(2, RoundingMode.HALF_EVEN).toString()
+                        .plus(getString(R.string.bgn))
             }
         }
     }
@@ -116,58 +112,23 @@ class CurrencyActivity : AppCompatActivity() {
                     id: Long
                 ) {
                 }
+
                 override fun onNothingSelected(parent: AdapterView<*>) {}
             }
         }
     }
 
-    private fun showDialog (text: String ) {
+    private fun showDialog(text: String) {
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(false)
         dialog.setContentView(R.layout.alert_dialog)
         val dialogText = dialog.findViewById(R.id.dialogTextTv) as TextView
         dialogText.text = text
-        //title = text
         val yesBtn = dialog.findViewById(R.id.dialogDoneBtn) as Button
         yesBtn.setOnClickListener {
             dialog.dismiss()
         }
         dialog.show()
-
-/*        val builder = AlertDialog.Builder(ContextThemeWrapper(this, R.style.AlertDialogCustom))
-        val alertDialog = builder.create()
-        alertDialog.layoutInflater.inflate()
-
-        with(builder)
-        {
-            setTitle(R.string.currency_converted)
-            setMessage(text)
-            setPositiveButton(getString(R.string.done), DialogInterface.OnClickListener(function = positiveButtonClick))
-            show()
-        }*/
     }
-
-/*    fun showNotificationDialog() {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Androidly Alert")
-        builder.setMessage("We have a message")
-//builder.setPositiveButton("OK", DialogInterface.OnClickListener(function = x))
-
-        builder.setPositiveButton(android.R.string.yes) { dialog, which ->
-            Toast.makeText(applicationContext,
-                android.R.string.yes, Toast.LENGTH_SHORT).show()
-        }
-
-        builder.setNegativeButton(android.R.string.no) { dialog, which ->
-            Toast.makeText(applicationContext,
-                android.R.string.no, Toast.LENGTH_SHORT).show()
-        }
-
-        builder.setNeutralButton("Maybe") { dialog, which ->
-            Toast.makeText(applicationContext,
-                "Maybe", Toast.LENGTH_SHORT).show()
-        }
-        builder.show()
-    }*/
 }
