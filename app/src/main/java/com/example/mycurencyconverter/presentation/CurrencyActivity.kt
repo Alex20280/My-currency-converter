@@ -69,7 +69,9 @@ class CurrencyActivity : AppCompatActivity() {
     private fun initViews() {
         lifecycleScope.launchWhenStarted {
             viewModel.euroBalance.collect { euroWallet ->
-                binding.euroTv.text = euroWallet.toString().plus(getString(R.string.euro))
+                //binding.euroTv.text = euroWallet.toString().plus(getString(R.string.euro))
+                binding.euroTv.text = BigDecimal(euroWallet).setScale(2, RoundingMode.HALF_EVEN).toString()
+                    .plus(getString(R.string.euro))
             }
 
         }

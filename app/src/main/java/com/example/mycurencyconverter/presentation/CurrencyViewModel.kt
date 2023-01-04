@@ -20,8 +20,8 @@ import kotlin.math.roundToInt
 @HiltViewModel
 class CurrencyViewModel @Inject constructor(
     val repository: CurrencyConverter,
-    val dispatchers:DispatcherProvider
-): ViewModel(){
+    val dispatchers: DispatcherProvider
+) : ViewModel() {
 
     val currentEuroBalance = 1000.0
     private var currentUsdBalance = 0.0
@@ -35,63 +35,83 @@ class CurrencyViewModel @Inject constructor(
     private val _conversion = MutableStateFlow<CurrencyEvent>(CurrencyEvent.Empty)
     val conversion: StateFlow<CurrencyEvent> = _conversion
 
-    private val _currentEuroBalance: MutableStateFlow <Double> = MutableStateFlow (currentEuroBalance)
-    val euroBalance: StateFlow <Double> = _currentEuroBalance
+    private val _currentEuroBalance: MutableStateFlow<Double> = MutableStateFlow(currentEuroBalance)
+    val euroBalance: StateFlow<Double> = _currentEuroBalance
 
-    private val _currentUsdBalance: MutableStateFlow <Double> = MutableStateFlow (currentUsdBalance)
-    val usdBalance: StateFlow <Double> = _currentUsdBalance
+    private val _currentUsdBalance: MutableStateFlow<Double> = MutableStateFlow(currentUsdBalance)
+    val usdBalance: StateFlow<Double> = _currentUsdBalance
 
-    private val _currentBngBalance: MutableStateFlow <Double> = MutableStateFlow (currentBngBalance)
-    val bngBalance: StateFlow <Double> = _currentBngBalance
+    private val _currentBngBalance: MutableStateFlow<Double> = MutableStateFlow(currentBngBalance)
+    val bngBalance: StateFlow<Double> = _currentBngBalance
 
     sealed class CurrencyEvent {
-        class Success(val resultText: String): CurrencyEvent()
-        class Failure(val errorText: String): CurrencyEvent()
+        class Success(val resultText: String) : CurrencyEvent()
+        class Failure(val errorText: String) : CurrencyEvent()
         object Empty : CurrencyEvent()
     }
 
     fun convert(amountStr: String, fromCurrency: String, toCurrency: String) {
         val fromAmount = amountStr.toFloatOrNull()
-        if(fromAmount == null) {
+        if (fromAmount == null) {
             _conversion.value = CurrencyEvent.Failure("Not a valid amount")
             return
         }
-        if (_currentEuroBalance.value - amountStr.toDouble() <= 0) {
+        if (balanceCheck(amountStr, fromCurrency)) {
             return
         }
         viewModelScope.launch(dispatchers.io) {
-            when(val ratesResponse = repository.getRates(fromCurrency)) {
-                is Resource.Error -> _conversion.value = CurrencyEvent.Failure(ratesResponse.message!!)
+            when (val ratesResponse = repository.getRates(fromCurrency)) {
+                is Resource.Error -> _conversion.value =
+                    CurrencyEvent.Failure(ratesResponse.message!!)
                 is Resource.Success -> {
                     val rates = ratesResponse.data!!.rates
                     val rate = getRateForCurrency(toCurrency, rates)
-                    if(rate == null) {
+                    if (rate == null) {
                         _conversion.value = CurrencyEvent.Failure("Unexpected error")
                     } else {
-                        if (transactionCounter > freeTransactionLimit){
-                            convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
-                            _currentEuroBalance.value  -= currentEuroBalance*commissionFee
+                        if (transactionCounter > freeTransactionLimit) {
+                            convertedAmount =
+                                round(fromAmount * rate.toString().toDouble() * 100) / 100
+                            _currentEuroBalance.value -= currentEuroBalance * commissionFee
                             uiComisionFee = 0.70
-                        } else{
+                        } else {
                             convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
                         }
-                        if (fromCurrency == "EUR"){
-                            _currentEuroBalance.value  -= amountStr.toDouble()
-                        }
-                        if (toCurrency == "USD"){
-                            _currentUsdBalance.value  += convertedAmount
-                        }
-                        if (toCurrency == "BGN"){
-                            _currentBngBalance.value  += convertedAmount
-                        }
-                        if (toCurrency == "EUR"){
-                            _currentEuroBalance.value  += convertedAmount
-                        }
+
+                        updateBalance(toCurrency, fromCurrency, convertedAmount)
                         _conversion.value = CurrencyEvent.Success(convertedAmount.toString())
                         transactionCounter++
                     }
                 }
             }
+        }
+    }
+
+    private fun balanceCheck(amountStr: String, fromCurrency: String): Boolean {
+        when (fromCurrency) {
+            "EUR" -> if (_currentEuroBalance.value - amountStr.toDouble() <= 0) {
+                return true
+            }
+            "USD" -> if (_currentUsdBalance.value - amountStr.toDouble() <= 0) {
+                return true
+            }
+            "BGN" -> if (_currentBngBalance.value - amountStr.toDouble() <= 0) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun updateBalance(toCurrency: String, fromCurrency: String, convertedAmount: Double) {
+        when (toCurrency) {
+            "EUR" -> _currentEuroBalance.value += convertedAmount
+            "USD" -> _currentUsdBalance.value += convertedAmount
+            "BGN" -> _currentBngBalance.value += convertedAmount
+        }
+        when (fromCurrency) {
+            "EUR" -> _currentEuroBalance.value -= convertedAmount
+            "USD" -> _currentUsdBalance.value -= convertedAmount
+            "BGN" -> _currentBngBalance.value -= convertedAmount
         }
     }
 
@@ -132,3 +152,50 @@ class CurrencyViewModel @Inject constructor(
     }
 
 }
+
+
+/*
+fun convert(amountStr: String, fromCurrency: String, toCurrency: String) {
+    val fromAmount = amountStr.toFloatOrNull()
+    if(fromAmount == null) {
+        _conversion.value = CurrencyViewModel.CurrencyEvent.Failure("Not a valid amount")
+        return
+    }
+    if (_currentEuroBalance.value - amountStr.toDouble() <= 0) {
+        return
+    }
+    viewModelScope.launch(dispatchers.io) {
+        when(val ratesResponse = repository.getRates(fromCurrency)) {
+            is Resource.Error -> _conversion.value = CurrencyViewModel.CurrencyEvent.Failure(ratesResponse.message!!)
+            is Resource.Success -> {
+                val rates = ratesResponse.data!!.rates
+                val rate = getRateForCurrency(toCurrency, rates)
+                if(rate == null) {
+                    _conversion.value = CurrencyViewModel.CurrencyEvent.Failure("Unexpected error")
+                } else {
+                    if (transactionCounter > freeTransactionLimit){
+                        convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
+                        _currentEuroBalance.value  -= currentEuroBalance*commissionFee
+                        uiComisionFee = 0.70
+                    } else{
+                        convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
+                    }
+                    if (fromCurrency == "EUR"){
+                        _currentEuroBalance.value  -= amountStr.toDouble()
+                    }
+                    if (toCurrency == "USD"){
+                        _currentUsdBalance.value  += convertedAmount
+                    }
+                    if (toCurrency == "BGN"){
+                        _currentBngBalance.value  += convertedAmount
+                    }
+                    if (toCurrency == "EUR"){
+                        _currentEuroBalance.value  += convertedAmount
+                    }
+                    _conversion.value = CurrencyViewModel.CurrencyEvent.Success(convertedAmount.toString())
+                    transactionCounter++
+                }
+            }
+        }
+    }
+}*/
