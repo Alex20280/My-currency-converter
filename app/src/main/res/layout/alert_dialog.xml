@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="240dp"
-    android:layout_height="130dp"
+    android:layout_width="265dp"
+    android:layout_height="145dp"
     android:background="@drawable/layout_bg"
     android:orientation="vertical">
 
@@ -11,6 +11,7 @@
         android:gravity="center"
         android:textColor="@color/black"
         android:textSize="16sp"
+        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/currency_converted" />
@@ -23,13 +24,12 @@
         android:layout_margin="7dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView" />
+        android:text="@string/dialog_text" />
 
     <View
         android:id="@+id/firstDevider"
         android:layout_width="match_parent"
         android:layout_height="0.3dp"
-        android:layout_marginTop="15dp"
         android:background="@color/grey" />
 
     <Button
@@ -40,6 +40,7 @@
         android:backgroundTint="@color/white"
         android:textSize="16sp"
         android:text="@string/Done"
+        android:layout_marginBottom="10dp"
         android:background="@android:color/transparent"
         android:textAllCaps="false"
         android:textColor="@color/kahu_blue"

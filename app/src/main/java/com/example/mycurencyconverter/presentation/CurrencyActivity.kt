@@ -45,7 +45,7 @@ class CurrencyActivity : AppCompatActivity() {
                     is CurrencyViewModel.CurrencyEvent.Success -> {
                         binding.receiveEditText.setText(getString(R.string.plus_sign).plus(event.resultText))
                         binding.receiveEditText.setTextColor(resources.getColor(R.color.light_green))
-                        showDialog("You have converted ${binding.sellEditText.text} ${binding.sellSpinner.selectedItem} to ${binding.receiveEditText.text} ${binding.receiveSpinner.selectedItem}. Commission Fee -  ${viewModel.uiComisionFee} ${binding.receiveSpinner.selectedItem}.")
+                        showDialog("You have converted ${binding.sellEditText.text} ${binding.sellSpinner.selectedItem} to ${binding.receiveEditText.text} ${binding.receiveSpinner.selectedItem}. Commission Fee -  ${binding.sellSpinner.selectedItem}.")
                     }
                     is CurrencyViewModel.CurrencyEvent.Failure -> {
                         //TODO (Implement some notification. Depends on usecase)
@@ -62,6 +62,9 @@ class CurrencyActivity : AppCompatActivity() {
                 binding.sellEditText.text.toString(),
                 binding.sellSpinner.selectedItem.toString(),
                 binding.receiveSpinner.selectedItem.toString(),
+                {
+
+                }
             )
         }
     }

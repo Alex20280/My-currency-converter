@@ -1,7 +1,5 @@
 package com.example.mycurencyconverter.presentation
 
-import android.util.Log
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.currencyconverter.domain.CurrencyConverter
@@ -11,11 +9,9 @@ import com.example.mycurencyconverter.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.round
-import kotlin.math.roundToInt
 
 @HiltViewModel
 class CurrencyViewModel @Inject constructor(
@@ -23,13 +19,13 @@ class CurrencyViewModel @Inject constructor(
     val dispatchers: DispatcherProvider
 ) : ViewModel() {
 
-    val currentEuroBalance = 1000.0
+    private var currentEuroBalance = 1000.0
     private var currentUsdBalance = 0.0
     private var currentBngBalance = 0.0
+    private var currentOtherBalance = 0.0
     private var transactionCounter = 0
-    private var freeTransactionLimit = 4
-    private val commissionFee = 0.007
-    var uiComisionFee = 0.0
+    private var freeTransactionLimit = 5
+    private val commissionFee = 0.07
     private var convertedAmount = 0.0
 
     private val _conversion = MutableStateFlow<CurrencyEvent>(CurrencyEvent.Empty)
@@ -44,21 +40,31 @@ class CurrencyViewModel @Inject constructor(
     private val _currentBngBalance: MutableStateFlow<Double> = MutableStateFlow(currentBngBalance)
     val bngBalance: StateFlow<Double> = _currentBngBalance
 
+    private val _currentOtherCurrenciesBalance: MutableStateFlow<Double> = MutableStateFlow(currentOtherBalance)
+    val otherBalance: StateFlow<Double> = _currentOtherCurrenciesBalance
+
     sealed class CurrencyEvent {
         class Success(val resultText: String) : CurrencyEvent()
         class Failure(val errorText: String) : CurrencyEvent()
         object Empty : CurrencyEvent()
     }
 
-    fun convert(amountStr: String, fromCurrency: String, toCurrency: String) {
+
+    fun convert(amountStr: String, fromCurrency: String, toCurrency: String, callback:(fee:Double) -> Unit ) {
         val fromAmount = amountStr.toFloatOrNull()
         if (fromAmount == null) {
             _conversion.value = CurrencyEvent.Failure("Not a valid amount")
             return
         }
-        if (balanceCheck(amountStr, fromCurrency)) {
+        val currentBalance = getBalance(fromCurrency).value
+        val fee  =  if (transactionCounter >= freeTransactionLimit) {
+            fromAmount*commissionFee
+        } else 0.0
+
+        if(currentBalance<fromAmount + fee){
             return
         }
+
         viewModelScope.launch(dispatchers.io) {
             when (val ratesResponse = repository.getRates(fromCurrency)) {
                 is Resource.Error -> _conversion.value =
@@ -69,17 +75,12 @@ class CurrencyViewModel @Inject constructor(
                     if (rate == null) {
                         _conversion.value = CurrencyEvent.Failure("Unexpected error")
                     } else {
-                        if (transactionCounter > freeTransactionLimit) {
-                            convertedAmount =
-                                round(fromAmount * rate.toString().toDouble() * 100) / 100
-                            _currentEuroBalance.value -= currentEuroBalance * commissionFee
-                            uiComisionFee = 0.70
-                        } else {
-                            convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
-                        }
+                        convertedAmount =  round(fromAmount * rate.toString().toDouble() * 100) / 100
 
-                        updateBalance(toCurrency, fromCurrency, convertedAmount)
+                        updateBalance(toCurrency, fromCurrency, convertedAmount, fromAmount, fee)
+
                         _conversion.value = CurrencyEvent.Success(convertedAmount.toString())
+                        callback.invoke(commissionFee)
                         transactionCounter++
                     }
                 }
@@ -87,32 +88,26 @@ class CurrencyViewModel @Inject constructor(
         }
     }
 
-    private fun balanceCheck(amountStr: String, fromCurrency: String): Boolean {
+    private fun getBalance(fromCurrency: String) =
         when (fromCurrency) {
-            "EUR" -> if (_currentEuroBalance.value - amountStr.toDouble() <= 0) {
-                return true
-            }
-            "USD" -> if (_currentUsdBalance.value - amountStr.toDouble() <= 0) {
-                return true
-            }
-            "BGN" -> if (_currentBngBalance.value - amountStr.toDouble() <= 0) {
-                return true
-            }
+            "EUR" -> _currentEuroBalance
+            "USD" -> _currentUsdBalance
+            "BNG" -> _currentBngBalance
+            else -> _currentOtherCurrenciesBalance
         }
-        return false
-    }
 
-    private fun updateBalance(toCurrency: String, fromCurrency: String, convertedAmount: Double) {
-        when (toCurrency) {
-            "EUR" -> _currentEuroBalance.value += convertedAmount
-            "USD" -> _currentUsdBalance.value += convertedAmount
-            "BGN" -> _currentBngBalance.value += convertedAmount
-        }
-        when (fromCurrency) {
-            "EUR" -> _currentEuroBalance.value -= convertedAmount
-            "USD" -> _currentUsdBalance.value -= convertedAmount
-            "BGN" -> _currentBngBalance.value -= convertedAmount
-        }
+
+    private fun updateBalance(
+        toCurrency: String,
+        fromCurrency: String,
+        convertedAmount: Double,
+        fromAmount: Float,
+        fee: Double
+    ) {
+        val balanceFromFromStateFlow = getBalance(fromCurrency)
+        balanceFromFromStateFlow.value -= fromAmount + fee
+        val balanceToStateFlow = getBalance(toCurrency)
+        balanceToStateFlow.value += convertedAmount
     }
 
     private fun getRateForCurrency(currency: String, rates: Rates) = when (currency) {
@@ -153,49 +148,3 @@ class CurrencyViewModel @Inject constructor(
 
 }
 
-
-/*
-fun convert(amountStr: String, fromCurrency: String, toCurrency: String) {
-    val fromAmount = amountStr.toFloatOrNull()
-    if(fromAmount == null) {
-        _conversion.value = CurrencyViewModel.CurrencyEvent.Failure("Not a valid amount")
-        return
-    }
-    if (_currentEuroBalance.value - amountStr.toDouble() <= 0) {
-        return
-    }
-    viewModelScope.launch(dispatchers.io) {
-        when(val ratesResponse = repository.getRates(fromCurrency)) {
-            is Resource.Error -> _conversion.value = CurrencyViewModel.CurrencyEvent.Failure(ratesResponse.message!!)
-            is Resource.Success -> {
-                val rates = ratesResponse.data!!.rates
-                val rate = getRateForCurrency(toCurrency, rates)
-                if(rate == null) {
-                    _conversion.value = CurrencyViewModel.CurrencyEvent.Failure("Unexpected error")
-                } else {
-                    if (transactionCounter > freeTransactionLimit){
-                        convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
-                        _currentEuroBalance.value  -= currentEuroBalance*commissionFee
-                        uiComisionFee = 0.70
-                    } else{
-                        convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
-                    }
-                    if (fromCurrency == "EUR"){
-                        _currentEuroBalance.value  -= amountStr.toDouble()
-                    }
-                    if (toCurrency == "USD"){
-                        _currentUsdBalance.value  += convertedAmount
-                    }
-                    if (toCurrency == "BGN"){
-                        _currentBngBalance.value  += convertedAmount
-                    }
-                    if (toCurrency == "EUR"){
-                        _currentEuroBalance.value  += convertedAmount
-                    }
-                    _conversion.value = CurrencyViewModel.CurrencyEvent.Success(convertedAmount.toString())
-                    transactionCounter++
-                }
-            }
-        }
-    }
-}*/
