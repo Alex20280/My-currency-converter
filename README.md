@@ -2,7 +2,6 @@
 <p>Technologies: Hilt, Coroutines, Retrofit, ViewModel, Flow</p>
 <p>Architecture: MVVM</p>
 <p>Language: Kotlin</p>
-<p>API: https://developers.paysera.com/tasks/api/currency-exchange-rates</p>
 <p>The Conversion rate is updated every 5 seconds.</p>
 <p>The user has wallets in EUR, USD and BGN as shown on the provided screen. If it's necessary we can add other wallets.</p>
 <p>The user has started balance of 1000 Euros (EUR) that can be converted to any currency. The amount will be taken from sell currency wallet</p>
