@@ -1,8 +1,8 @@
 package com.example.mycurencyconverter.presentation
 
 import android.app.Dialog
-import android.content.DialogInterface
 import android.os.Bundle
+import android.os.Handler
 import android.view.View
 import android.view.Window
 import android.widget.*
@@ -15,14 +15,16 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-//TODO write a documentation
-
 @AndroidEntryPoint
 class CurrencyActivity : AppCompatActivity() {
 
     private val viewModel: CurrencyViewModel by viewModels()
 
     private lateinit var binding: ActivityMainBinding
+    private var handler: Handler = Handler()
+    private var runnable: Runnable? = null
+    private var delay = 5000
+    private var amountOfFee = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +40,31 @@ class CurrencyActivity : AppCompatActivity() {
 
     }
 
+    override fun onResume() {
+        startHandler(handler)
+        super.onResume()
+    }
+
+    override fun onPause() {
+        removeHandler(handler)
+        super.onPause()
+    }
+
+    private fun removeHandler(handler: Handler) {
+        handler.removeCallbacks(runnable!!)
+    }
+
+    private fun startHandler(handler: Handler) {
+        handler.postDelayed(Runnable {
+            handler.postDelayed(runnable!!, delay.toLong())
+            loader()
+        }.also { runnable = it }, delay.toLong())
+    }
+
+    private fun loader() {
+        viewModel.startLoader()
+    }
+
     private fun observe() {
         lifecycleScope.launchWhenStarted {
             viewModel.conversion.collect { event ->
@@ -45,10 +72,10 @@ class CurrencyActivity : AppCompatActivity() {
                     is CurrencyViewModel.CurrencyEvent.Success -> {
                         binding.receiveEditText.setText(getString(R.string.plus_sign).plus(event.resultText))
                         binding.receiveEditText.setTextColor(resources.getColor(R.color.light_green))
-                        showDialog("You have converted ${binding.sellEditText.text} ${binding.sellSpinner.selectedItem} to ${binding.receiveEditText.text} ${binding.receiveSpinner.selectedItem}. Commission Fee -  ${binding.sellSpinner.selectedItem}.")
+                        showDialog("You have converted ${binding.sellEditText.text} ${binding.sellSpinner.selectedItem} to ${binding.receiveEditText.text} ${binding.receiveSpinner.selectedItem}. Commission Fee -  $amountOfFee ${binding.sellSpinner.selectedItem}.")
                     }
                     is CurrencyViewModel.CurrencyEvent.Failure -> {
-                        //TODO (Implement some notification. Depends on usecase)
+                        //TODO (Show notification depending on a use case)
                     }
                     else -> Unit
                 }
@@ -61,20 +88,19 @@ class CurrencyActivity : AppCompatActivity() {
             viewModel.convert(
                 binding.sellEditText.text.toString(),
                 binding.sellSpinner.selectedItem.toString(),
-                binding.receiveSpinner.selectedItem.toString(),
-                {
-
-                }
-            )
+                binding.receiveSpinner.selectedItem.toString()
+            ) {
+                amountOfFee = it
+            }
         }
     }
 
     private fun initViews() {
         lifecycleScope.launchWhenStarted {
             viewModel.euroBalance.collect { euroWallet ->
-                //binding.euroTv.text = euroWallet.toString().plus(getString(R.string.euro))
-                binding.euroTv.text = BigDecimal(euroWallet).setScale(2, RoundingMode.HALF_EVEN).toString()
-                    .plus(getString(R.string.euro))
+                binding.euroTv.text =
+                    BigDecimal(euroWallet).setScale(2, RoundingMode.HALF_EVEN).toString()
+                        .plus(getString(R.string.euro))
             }
 
         }

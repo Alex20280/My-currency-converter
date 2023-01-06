@@ -6,7 +6,6 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface CurrencyApi {
-
     @GET("/tasks/api/currency-exchange-rates")
-    suspend fun getRates(@Query("base") base: String) : Response<CurrencyResponse>
+    suspend fun getRates(): Response<CurrencyResponse>
 }

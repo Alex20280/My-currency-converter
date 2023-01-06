@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="265dp"
-    android:layout_height="145dp"
+    android:layout_height="wrap_content"
     android:background="@drawable/layout_bg"
     android:orientation="vertical">
 
@@ -29,6 +29,7 @@
     <View
         android:id="@+id/firstDevider"
         android:layout_width="match_parent"
+        android:layout_marginTop="10dp"
         android:layout_height="0.3dp"
         android:background="@color/grey" />
 
@@ -40,7 +41,7 @@
         android:backgroundTint="@color/white"
         android:textSize="16sp"
         android:text="@string/Done"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="5dp"
         android:background="@android:color/transparent"
         android:textAllCaps="false"
         android:textColor="@color/kahu_blue"

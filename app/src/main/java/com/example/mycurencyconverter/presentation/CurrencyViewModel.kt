@@ -24,9 +24,11 @@ class CurrencyViewModel @Inject constructor(
     private var currentBngBalance = 0.0
     private var currentOtherBalance = 0.0
     private var transactionCounter = 0
-    private var freeTransactionLimit = 5
+    private var freeTransactionLimit = 4
     private val commissionFee = 0.07
+    private val zeroCommissionFee = 0.0
     private var convertedAmount = 0.0
+    private var rates: Rates? = null
 
     private val _conversion = MutableStateFlow<CurrencyEvent>(CurrencyEvent.Empty)
     val conversion: StateFlow<CurrencyEvent> = _conversion
@@ -40,7 +42,8 @@ class CurrencyViewModel @Inject constructor(
     private val _currentBngBalance: MutableStateFlow<Double> = MutableStateFlow(currentBngBalance)
     val bngBalance: StateFlow<Double> = _currentBngBalance
 
-    private val _currentOtherCurrenciesBalance: MutableStateFlow<Double> = MutableStateFlow(currentOtherBalance)
+    private val _currentOtherCurrenciesBalance: MutableStateFlow<Double> =
+        MutableStateFlow(currentOtherBalance)
     val otherBalance: StateFlow<Double> = _currentOtherCurrenciesBalance
 
     sealed class CurrencyEvent {
@@ -49,53 +52,55 @@ class CurrencyViewModel @Inject constructor(
         object Empty : CurrencyEvent()
     }
 
+    fun startLoader() {
+        viewModelScope.launch(dispatchers.io) {
+            when (val ratesResponse = repository.getRates()) {
+                is Resource.Error -> _conversion.value =
+                    CurrencyEvent.Failure(ratesResponse.message!!)
+                is Resource.Success -> {
+                    rates = ratesResponse.data!!.rates
+                }
+            }
+        }
+    }
 
-    fun convert(amountStr: String, fromCurrency: String, toCurrency: String, callback:(fee:Double) -> Unit ) {
+    fun convert(
+        amountStr: String,
+        fromCurrency: String,
+        toCurrency: String,
+        callback: (fee: Double) -> Unit
+    ) {
         val fromAmount = amountStr.toFloatOrNull()
         if (fromAmount == null) {
             _conversion.value = CurrencyEvent.Failure("Not a valid amount")
             return
         }
+        val fee = if (transactionCounter >= freeTransactionLimit) {
+            fromAmount * commissionFee
+        } else {
+            zeroCommissionFee
+        }
         val currentBalance = getBalance(fromCurrency).value
-        val fee  =  if (transactionCounter >= freeTransactionLimit) {
-            fromAmount*commissionFee
-        } else 0.0
-
-        if(currentBalance<fromAmount + fee){
+        if (currentBalance < fromAmount + fee) {
             return
         }
-
-        viewModelScope.launch(dispatchers.io) {
-            when (val ratesResponse = repository.getRates(fromCurrency)) {
-                is Resource.Error -> _conversion.value =
-                    CurrencyEvent.Failure(ratesResponse.message!!)
-                is Resource.Success -> {
-                    val rates = ratesResponse.data!!.rates
-                    val rate = getRateForCurrency(toCurrency, rates)
-                    if (rate == null) {
-                        _conversion.value = CurrencyEvent.Failure("Unexpected error")
-                    } else {
-                        convertedAmount =  round(fromAmount * rate.toString().toDouble() * 100) / 100
-
-                        updateBalance(toCurrency, fromCurrency, convertedAmount, fromAmount, fee)
-
-                        _conversion.value = CurrencyEvent.Success(convertedAmount.toString())
-                        callback.invoke(commissionFee)
-                        transactionCounter++
-                    }
-                }
-            }
+        val rate = getRateForCurrency(toCurrency, rates)
+        convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
+        updateBalance(toCurrency, fromCurrency, convertedAmount, fromAmount, fee)
+        _conversion.value = CurrencyEvent.Success(convertedAmount.toString())
+        if (transactionCounter >= freeTransactionLimit) {
+            callback.invoke(commissionFee)
         }
+        transactionCounter++
     }
 
     private fun getBalance(fromCurrency: String) =
         when (fromCurrency) {
             "EUR" -> _currentEuroBalance
             "USD" -> _currentUsdBalance
-            "BNG" -> _currentBngBalance
+            "BGN" -> _currentBngBalance
             else -> _currentOtherCurrenciesBalance
         }
-
 
     private fun updateBalance(
         toCurrency: String,
@@ -110,41 +115,39 @@ class CurrencyViewModel @Inject constructor(
         balanceToStateFlow.value += convertedAmount
     }
 
-    private fun getRateForCurrency(currency: String, rates: Rates) = when (currency) {
-        "CAD" -> rates.cAD
-        "HKD" -> rates.hKD
-        "ISK" -> rates.iSK
-        "EUR" -> rates.eUR
-        "PHP" -> rates.pHP
-        "DKK" -> rates.dKK
-        "HUF" -> rates.hUF
-        "CZK" -> rates.cZK
-        "AUD" -> rates.aUD
-        "RON" -> rates.rON
-        "SEK" -> rates.sEK
-        "IDR" -> rates.iDR
-        "INR" -> rates.iNR
-        "BRL" -> rates.bRL
-        "RUB" -> rates.rUB
-        "HRK" -> rates.hRK
-        "JPY" -> rates.jPY
-        "THB" -> rates.tHB
-        "CHF" -> rates.cHF
-        "SGD" -> rates.sGD
-        "PLN" -> rates.pLN
-        "BGN" -> rates.bGN
-        "CNY" -> rates.cNY
-        "NOK" -> rates.nOK
-        "NZD" -> rates.nZD
-        "ZAR" -> rates.zAR
-        "USD" -> rates.uSD
-        "MXN" -> rates.mXN
-        "ILS" -> rates.iLS
-        "GBP" -> rates.gBP
-        "KRW" -> rates.kRW
-        "MYR" -> rates.mYR
+    private fun getRateForCurrency(currency: String, rates: Rates?) = when (currency) {
+        "CAD" -> rates?.cAD
+        "HKD" -> rates?.hKD
+        "ISK" -> rates?.iSK
+        "EUR" -> rates?.eUR
+        "PHP" -> rates?.pHP
+        "DKK" -> rates?.dKK
+        "HUF" -> rates?.hUF
+        "CZK" -> rates?.cZK
+        "AUD" -> rates?.aUD
+        "RON" -> rates?.rON
+        "SEK" -> rates?.sEK
+        "IDR" -> rates?.iDR
+        "INR" -> rates?.iNR
+        "BRL" -> rates?.bRL
+        "RUB" -> rates?.rUB
+        "HRK" -> rates?.hRK
+        "JPY" -> rates?.jPY
+        "THB" -> rates?.tHB
+        "CHF" -> rates?.cHF
+        "SGD" -> rates?.sGD
+        "PLN" -> rates?.pLN
+        "BGN" -> rates?.bGN
+        "CNY" -> rates?.cNY
+        "NOK" -> rates?.nOK
+        "NZD" -> rates?.nZD
+        "ZAR" -> rates?.zAR
+        "USD" -> rates?.uSD
+        "MXN" -> rates?.mXN
+        "ILS" -> rates?.iLS
+        "GBP" -> rates?.gBP
+        "KRW" -> rates?.kRW
+        "MYR" -> rates?.mYR
         else -> null
     }
-
 }
-
