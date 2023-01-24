@@ -2,10 +2,11 @@ package com.example.mycurencyconverter.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.currencyconverter.domain.CurrencyConverter
+import com.example.currencyconverter.domain.GetRatesUseCase
 import com.example.mycurencyconverter.data.model.Rates
 import com.example.mycurencyconverter.utils.DispatcherProvider
 import com.example.mycurencyconverter.utils.Resource
+import com.example.mycurencyconverter.utils.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,7 @@ import kotlin.math.round
 
 @HiltViewModel
 class CurrencyViewModel @Inject constructor(
-    private val repository: CurrencyConverter,
+    private val repository: GetRatesUseCase,
     private val dispatchers: DispatcherProvider
 ) : ViewModel() {
 
@@ -31,31 +32,25 @@ class CurrencyViewModel @Inject constructor(
     private var convertedAmount = 0.0
     private var rates: Rates? = null
 
-    private val _conversion = MutableStateFlow<CurrencyEvent>(CurrencyEvent.Empty)
-    val conversion: StateFlow<CurrencyEvent> = _conversion
+    private val mConversion = MutableStateFlow<CurrencyEvent>(CurrencyEvent.Empty)
+    val conversion: StateFlow<CurrencyEvent> = mConversion
 
-    private val _currentEuroBalance: MutableStateFlow<Double> = MutableStateFlow(currentEuroBalance)
-    val euroBalance: StateFlow<Double> = _currentEuroBalance.asStateFlow()
+    private val mCurrentEuroBalance: MutableStateFlow<Double> = MutableStateFlow(currentEuroBalance)
+    val euroBalance: StateFlow<Double> = mCurrentEuroBalance.asStateFlow()
 
-    private val _currentUsdBalance: MutableStateFlow<Double> = MutableStateFlow(currentUsdBalance)
-    val usdBalance: StateFlow<Double> = _currentUsdBalance.asStateFlow()
+    private val mCurrentUsdBalance: MutableStateFlow<Double> = MutableStateFlow(currentUsdBalance)
+    val usdBalance: StateFlow<Double> = mCurrentUsdBalance.asStateFlow()
 
-    private val _currentBngBalance: MutableStateFlow<Double> = MutableStateFlow(currentBngBalance)
-    val bngBalance: StateFlow<Double> = _currentBngBalance.asStateFlow()
+    private val mCurrentBngBalance: MutableStateFlow<Double> = MutableStateFlow(currentBngBalance)
+    val bngBalance: StateFlow<Double> = mCurrentBngBalance.asStateFlow()
 
-    private val _currentOtherCurrenciesBalance: MutableStateFlow<Double> = MutableStateFlow(currentOtherBalance)
-    val otherBalance: StateFlow<Double> = _currentOtherCurrenciesBalance.asStateFlow()
-
-    sealed class CurrencyEvent {
-        class Success(val resultText: String) : CurrencyEvent()
-        class Failure(val errorText: String) : CurrencyEvent()
-        object Empty : CurrencyEvent()
-    }
+    private val mCurrentOtherCurrenciesBalance: MutableStateFlow<Double> = MutableStateFlow(currentOtherBalance)
+    val otherBalance: StateFlow<Double> = mCurrentOtherCurrenciesBalance.asStateFlow()
 
     fun startLoader() {
         viewModelScope.launch(dispatchers.io) {
             when (val ratesResponse = repository.getRates()) {
-                is Resource.Error -> _conversion.value =
+                is Resource.Error -> mConversion.value =
                     CurrencyEvent.Failure(ratesResponse.message!!)
                 is Resource.Success -> {
                     rates = ratesResponse.data!!.rates
@@ -67,7 +62,7 @@ class CurrencyViewModel @Inject constructor(
     fun convert(amountStr: String, fromCurrency: String, toCurrency: String, callback: (fee: Double) -> Unit) {
         val fromAmount = amountStr.toFloatOrNull()
         if (fromAmount == null) {
-            _conversion.value = CurrencyEvent.Failure("Not a valid amount")
+            mConversion.value = CurrencyEvent.Failure("Not a valid amount")
             return
         }
         val fee = if (transactionCounter >= freeTransactionLimit) {
@@ -79,10 +74,10 @@ class CurrencyViewModel @Inject constructor(
 
         if (!validateNegativeBalance(fromCurrency, fromAmount, fee)) return
 
-        val rate = getRateForCurrency(toCurrency, rates)
+        val rate = Utils.getRateForCurrency(toCurrency, rates)
         convertedAmount = round(fromAmount * rate.toString().toDouble() * 100) / 100
         updateBalance(toCurrency, fromCurrency, convertedAmount, fromAmount, fee)
-        _conversion.value = CurrencyEvent.Success(convertedAmount.toString())
+        mConversion.value = CurrencyEvent.Success(convertedAmount.toString())
         if (transactionCounter >= freeTransactionLimit) {
             callback.invoke(commissionFee)
         }
@@ -91,7 +86,7 @@ class CurrencyViewModel @Inject constructor(
 
     private fun validateCurrencies(fromCurrency: String, toCurrency: String): Boolean {
         if (fromCurrency == toCurrency){
-            _conversion.value = CurrencyEvent.Failure("Please check currencies")
+            mConversion.value = CurrencyEvent.Failure("Please check currencies")
             return false
         } else {
             return true
@@ -101,7 +96,7 @@ class CurrencyViewModel @Inject constructor(
     private fun validateNegativeBalance(fromCurrency: String, fromAmount: Float, fee: Double): Boolean {
         val currentBalance = getBalance(fromCurrency).value
         if (currentBalance < fromAmount + fee) {
-            _conversion.value = CurrencyEvent.Failure("You cannot go to negative balance")
+            mConversion.value = CurrencyEvent.Failure("You cannot go to negative balance")
             return false
         }
         return true
@@ -109,10 +104,10 @@ class CurrencyViewModel @Inject constructor(
 
     private fun getBalance(fromCurrency: String) =
         when (fromCurrency) {
-            "EUR" -> _currentEuroBalance
-            "USD" -> _currentUsdBalance
-            "BGN" -> _currentBngBalance
-            else -> _currentOtherCurrenciesBalance
+            "EUR" -> mCurrentEuroBalance
+            "USD" -> mCurrentUsdBalance
+            "BGN" -> mCurrentBngBalance
+            else -> mCurrentOtherCurrenciesBalance
         }
 
     private fun updateBalance(
@@ -128,39 +123,10 @@ class CurrencyViewModel @Inject constructor(
         balanceToStateFlow.value += convertedAmount
     }
 
-    private fun getRateForCurrency(currency: String, rates: Rates?) = when (currency) {
-        "CAD" -> rates?.cAD
-        "HKD" -> rates?.hKD
-        "ISK" -> rates?.iSK
-        "EUR" -> rates?.eUR
-        "PHP" -> rates?.pHP
-        "DKK" -> rates?.dKK
-        "HUF" -> rates?.hUF
-        "CZK" -> rates?.cZK
-        "AUD" -> rates?.aUD
-        "RON" -> rates?.rON
-        "SEK" -> rates?.sEK
-        "IDR" -> rates?.iDR
-        "INR" -> rates?.iNR
-        "BRL" -> rates?.bRL
-        "RUB" -> rates?.rUB
-        "HRK" -> rates?.hRK
-        "JPY" -> rates?.jPY
-        "THB" -> rates?.tHB
-        "CHF" -> rates?.cHF
-        "SGD" -> rates?.sGD
-        "PLN" -> rates?.pLN
-        "BGN" -> rates?.bGN
-        "CNY" -> rates?.cNY
-        "NOK" -> rates?.nOK
-        "NZD" -> rates?.nZD
-        "ZAR" -> rates?.zAR
-        "USD" -> rates?.uSD
-        "MXN" -> rates?.mXN
-        "ILS" -> rates?.iLS
-        "GBP" -> rates?.gBP
-        "KRW" -> rates?.kRW
-        "MYR" -> rates?.mYR
-        else -> null
+
+    sealed class CurrencyEvent {
+        class Success(val resultText: String) : CurrencyEvent()
+        class Failure(val errorText: String) : CurrencyEvent()
+        object Empty : CurrencyEvent()
     }
 }

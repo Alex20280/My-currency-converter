@@ -10,8 +10,8 @@
         android:id="@+id/dialogTitleTv"
         android:gravity="center"
         android:textColor="@color/black"
-        android:textSize="16sp"
-        android:layout_marginTop="10dp"
+        android:textSize="@dimen/dimens_16_sp"
+        android:layout_marginTop="@dimen/dimens_10_dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/currency_converted" />
@@ -20,8 +20,8 @@
         android:id="@+id/dialogTextTv"
         android:gravity="center"
         android:textColor="@color/black"
-        android:textSize="14sp"
-        android:layout_margin="7dp"
+        android:textSize="@dimen/dimens_14_sp"
+        android:layout_margin="@dimen/dimens_7_dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/dialog_text" />
@@ -29,9 +29,9 @@
     <View
         android:id="@+id/firstDevider"
         android:layout_width="match_parent"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="@dimen/dimens_10_dp"
         android:layout_height="0.3dp"
-        android:background="@color/grey" />
+        android:background="@color/light_grey" />
 
     <Button
         android:id="@+id/dialogDoneBtn"
@@ -39,9 +39,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:backgroundTint="@color/white"
-        android:textSize="16sp"
+        android:textSize="@dimen/dimens_16_sp"
         android:text="@string/Done"
-        android:layout_marginBottom="5dp"
+        android:layout_marginBottom="@dimen/dimens_5_dp"
         android:background="@android:color/transparent"
         android:textAllCaps="false"
         android:textColor="@color/kahu_blue"

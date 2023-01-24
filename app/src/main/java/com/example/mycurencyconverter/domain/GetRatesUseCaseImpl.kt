@@ -1,14 +1,14 @@
 package com.example.mycurencyconverter.domain
 
 import com.example.currencyconverter.data.CurrencyApi
-import com.example.currencyconverter.domain.CurrencyConverter
+import com.example.currencyconverter.domain.GetRatesUseCase
 import com.example.mycurencyconverter.data.model.CurrencyResponse
 import com.example.mycurencyconverter.utils.Resource
 import javax.inject.Inject
 
-class CurrencyConverterImpl @Inject constructor(
+class GetRatesUseCaseImpl @Inject constructor(
     private val api: CurrencyApi
-) : CurrencyConverter {
+) : GetRatesUseCase {
 
     override suspend fun getRates(): Resource<CurrencyResponse> {
         return try {

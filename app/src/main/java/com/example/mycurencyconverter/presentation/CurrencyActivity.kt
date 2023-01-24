@@ -1,6 +1,8 @@
 package com.example.mycurencyconverter.presentation
 
 import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
@@ -32,7 +34,6 @@ class CurrencyActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        initToolbar()
         initViews()
         initSpinner(binding.sellSpinner)
         initSpinner(binding.receiveSpinner)
@@ -76,7 +77,8 @@ class CurrencyActivity : AppCompatActivity() {
                         showDialog("You have converted ${binding.sellEditText.text} ${binding.sellSpinner.selectedItem} to ${binding.receiveEditText.text} ${binding.receiveSpinner.selectedItem}. Commission Fee -  $amountOfFee ${binding.sellSpinner.selectedItem}.")
                     }
                     is CurrencyViewModel.CurrencyEvent.Failure -> {
-                        Toast.makeText(this@CurrencyActivity,event.errorText,Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@CurrencyActivity, event.errorText, Toast.LENGTH_LONG)
+                            .show()
                     }
                     else -> Unit
                 }
@@ -124,10 +126,6 @@ class CurrencyActivity : AppCompatActivity() {
         }
     }
 
-    private fun initToolbar() {
-        binding.toolbar.root.title = getString(R.string.appLabel)
-    }
-
     private fun initSpinner(spinner: Spinner) {
         ArrayAdapter.createFromResource(
             this,
@@ -155,6 +153,7 @@ class CurrencyActivity : AppCompatActivity() {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(false)
         dialog.setContentView(R.layout.alert_dialog)
+        dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         val dialogText = dialog.findViewById(R.id.dialogTextTv) as TextView
         dialogText.text = text
         val yesBtn = dialog.findViewById(R.id.dialogDoneBtn) as Button

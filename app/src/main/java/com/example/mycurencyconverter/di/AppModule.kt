@@ -1,8 +1,8 @@
 package com.example.mycurencyconverter.di
 
 import com.example.currencyconverter.data.CurrencyApi
-import com.example.currencyconverter.domain.CurrencyConverter
-import com.example.mycurencyconverter.domain.CurrencyConverterImpl
+import com.example.currencyconverter.domain.GetRatesUseCase
+import com.example.mycurencyconverter.domain.GetRatesUseCaseImpl
 import com.example.mycurencyconverter.utils.DispatcherProvider
 import com.example.mycurencyconverter.utils.Utils
 import dagger.Module
@@ -40,7 +40,7 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideCurrencyConverter(api: CurrencyApi): CurrencyConverter = CurrencyConverterImpl(api)
+    fun provideCurrencyConverter(api: CurrencyApi): GetRatesUseCase = GetRatesUseCaseImpl(api)
 
     @Singleton
     @Provides
