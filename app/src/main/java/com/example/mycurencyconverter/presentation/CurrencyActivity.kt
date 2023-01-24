@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.mycurencyconverter.R
 import com.example.mycurencyconverter.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -75,7 +76,7 @@ class CurrencyActivity : AppCompatActivity() {
                         showDialog("You have converted ${binding.sellEditText.text} ${binding.sellSpinner.selectedItem} to ${binding.receiveEditText.text} ${binding.receiveSpinner.selectedItem}. Commission Fee -  $amountOfFee ${binding.sellSpinner.selectedItem}.")
                     }
                     is CurrencyViewModel.CurrencyEvent.Failure -> {
-                        //TODO (Show notification depending on a use case)
+                        Toast.makeText(this@CurrencyActivity,event.errorText,Toast.LENGTH_LONG).show()
                     }
                     else -> Unit
                 }
@@ -97,7 +98,7 @@ class CurrencyActivity : AppCompatActivity() {
 
     private fun initViews() {
         lifecycleScope.launchWhenStarted {
-            viewModel.euroBalance.collect { euroWallet ->
+            viewModel.euroBalance.collectLatest { euroWallet ->
                 binding.euroTv.text =
                     BigDecimal(euroWallet).setScale(2, RoundingMode.HALF_EVEN).toString()
                         .plus(getString(R.string.euro))
@@ -106,7 +107,7 @@ class CurrencyActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.usdBalance.collect { usdWallet ->
+            viewModel.usdBalance.collectLatest { usdWallet ->
                 binding.usdTv.text =
                     BigDecimal(usdWallet).setScale(2, RoundingMode.HALF_EVEN).toString()
                         .plus(getString(R.string.usd))
@@ -115,7 +116,7 @@ class CurrencyActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.bngBalance.collect { bgnWallet ->
+            viewModel.bngBalance.collectLatest { bgnWallet ->
                 binding.bgnTv.text =
                     BigDecimal(bgnWallet).setScale(2, RoundingMode.HALF_EVEN).toString()
                         .plus(getString(R.string.bgn))

@@ -18,6 +18,7 @@
     <string name="currency_converted">Currency converted</string>
     <string name="done">Done</string>
     <string name="dialog_text">You have converted 100 EUR to 112.90 USD. Commission Fee - 0.7.</string>
+    <string name="Erro_occurred">An error occurred</string>
 
     <string-array name="currency_array">
         <item>EUR</item>
