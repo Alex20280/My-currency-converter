@@ -12,5 +12,5 @@
 <p>The UI is very similar to the the screen pictures provided in requirement.</p>
 
 
-![myimage-alt-tag](https://imgur.com/a/oJ5P0OK.png)
-![myimage-alt-tag](https://imgur.com/sxe6OjP.png)
+![myimage-alt-tag](https://imgur.com/sMbOk49.png)
+![myimage-alt-tag](https://imgur.com/b92klq6.png)
