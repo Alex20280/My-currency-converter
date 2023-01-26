@@ -20,7 +20,7 @@
 
     <View
         android:id="@+id/secondDevider"
-        android:layout_width="@dimen/dimens_320_dp"
+        android:layout_width="@dimen/dimens_290_dp"
         android:layout_height="@dimen/dimens_0.3_dp"
         android:layout_marginTop="@dimen/dimens_8_dp"
         android:background="@color/light_grey"
@@ -84,7 +84,7 @@
 
     <View
         android:id="@+id/firstDevider"
-        android:layout_width="@dimen/dimens_320_dp"
+        android:layout_width="@dimen/dimens_290_dp"
         android:layout_height="@dimen/dimens_0.3_dp"
         android:layout_marginTop="@dimen/dimens_8_dp"
         android:background="@color/light_grey"
