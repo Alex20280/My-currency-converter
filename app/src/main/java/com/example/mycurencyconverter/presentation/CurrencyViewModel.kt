@@ -4,10 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.currencyconverter.domain.GetRatesUseCase
 import com.example.mycurencyconverter.data.model.Rates
-import com.example.mycurencyconverter.utils.DispatcherProvider
+import com.example.mycurencyconverter.di.IoDispatcher
+//import com.example.mycurencyconverter.utils.DispatcherProvider
 import com.example.mycurencyconverter.utils.Resource
 import com.example.mycurencyconverter.utils.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +21,7 @@ import kotlin.math.round
 @HiltViewModel
 class CurrencyViewModel @Inject constructor(
     private val repository: GetRatesUseCase,
-    private val dispatchers: DispatcherProvider
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private var currentEuroBalance = 1000.0
@@ -48,7 +51,7 @@ class CurrencyViewModel @Inject constructor(
     val otherBalance: StateFlow<Double> = mCurrentOtherCurrenciesBalance.asStateFlow()
 
     fun startLoader() {
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch(ioDispatcher) {
             when (val ratesResponse = repository.getRates()) {
                 is Resource.Error -> mConversion.value =
                     CurrencyEvent.Failure(ratesResponse.message!!)

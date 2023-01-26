@@ -3,7 +3,6 @@ package com.example.mycurencyconverter.di
 import com.example.currencyconverter.data.CurrencyApi
 import com.example.currencyconverter.domain.GetRatesUseCase
 import com.example.mycurencyconverter.domain.GetRatesUseCaseImpl
-import com.example.mycurencyconverter.utils.DispatcherProvider
 import com.example.mycurencyconverter.utils.Utils
 import dagger.Module
 import dagger.Provides
@@ -14,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 @Module
@@ -42,17 +42,12 @@ object AppModule {
     @Provides
     fun provideCurrencyConverter(api: CurrencyApi): GetRatesUseCase = GetRatesUseCaseImpl(api)
 
-    @Singleton
+    @IoDispatcher
     @Provides
-    fun provideDispatchers(): DispatcherProvider = object : DispatcherProvider {
-        override val main: CoroutineDispatcher
-            get() = Dispatchers.Main
-        override val io: CoroutineDispatcher
-            get() = Dispatchers.IO
-        override val default: CoroutineDispatcher
-            get() = Dispatchers.Default
-        override val unconfined: CoroutineDispatcher
-            get() = Dispatchers.Unconfined
+    fun providesIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
-    }
 }
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class IoDispatcher
